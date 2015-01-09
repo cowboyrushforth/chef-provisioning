@@ -29,7 +29,7 @@ module Provisioning
         create_ohai_files(action_handler, machine)
 
         # Create client.rb and client.pem on machine
-        content = client_rb_content(chef_server_url, machine.node['name'])
+        content = client_rb_content(chef_server_url, machine.node['name'], chef_server[:options][:ssl_verify_mode])
         machine.write_file(action_handler, convergence_options[:client_rb_path], content, :ensure_dir => true)
       end
 
@@ -169,18 +169,13 @@ module Provisioning
         end
       end
 
-      def client_rb_content(chef_server_url, node_name)
-        if chef_server_url.downcase.start_with?("https")
-          ssl_verify_mode = ':verify_peer'
-        else
-          ssl_verify_mode = ':verify_none'
-        end
+      def client_rb_content(chef_server_url, node_name, ssl_verify_mode)
 
         <<EOM
 chef_server_url #{chef_server_url.inspect}
 node_name #{node_name.inspect}
 client_key #{convergence_options[:client_pem_path].inspect}
-ssl_verify_mode #{ssl_verify_mode}
+ssl_verify_mode :#{ssl_verify_mode}
 EOM
       end
     end
