@@ -13,6 +13,7 @@ module Provisioning
           :client_pem_path => '/etc/chef/client.pem'
         })
         super(convergence_options, config)
+        @chef_version ||= convergence_options[:chef_version]
         @install_sh_url = convergence_options[:install_sh_url] || 'http://www.opscode.com/chef/install.sh'
         @install_sh_path = convergence_options[:install_sh_path] || '/tmp/chef-install.sh'
         @bootstrap_env = convergence_options[:bootstrap_proxy] ? "http_proxy=#{convergence_options[:bootstrap_proxy]}" : ""
@@ -31,7 +32,7 @@ module Provisioning
           # TODO ssh verification of install.sh before running arbtrary code would be nice?
           @@install_sh_cache[install_sh_url] ||= Net::HTTP.get(URI(install_sh_url))
           machine.write_file(action_handler, install_sh_path, @@install_sh_cache[install_sh_url], :ensure_dir => true)
-          machine.execute(action_handler, "bash -c '#{bootstrap_env} bash #{install_sh_path}'")
+          machine.execute(action_handler, "bash -c '#{bootstrap_env} bash #{install_sh_path} #{@chef_version ? "-v #{@chef_version}" : ""}'")
         end
       end
 
